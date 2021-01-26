@@ -1,0 +1,26 @@
+{
+    "name": "probonolabs/laravel-api-generator",
+    "description": "Laravel command which rapidly creates single file controllers, requests and resources",
+    "authors": [
+        {
+            "name": "Arnd-Jan Luters",
+            "email": "arnd-jan@luters.dev"
+        }
+    ],
+    "minimum-stability": "dev",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "ProBonoLabs\\LaravelApiGenerator\\RestApiServiceProvider"
+            ]
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "ProBonoLabs\\LaravelApiGenerator\\": "src"
+        }
+    },
+    "require": {
+        "nette/php-generator": "3.5.x-dev"
+    }
+}
