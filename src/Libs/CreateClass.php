@@ -3,6 +3,7 @@
 namespace ProBonoLabs\LaravelApiGenerator\Libs;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Nette\PhpGenerator\PhpFile;
 use Nette\PhpGenerator\PsrPrinter;
 
@@ -95,6 +96,9 @@ class CreateClass
      */
     public function mergeNamespace(string $appNamespace, string $localNamespace): string
     {
+        if(!Str::startsWith('app', [Str::lower($appNamespace)])) {
+            $appNamespace = 'App\\' . $appNamespace;
+        }
         $this->namespaceName = collect(explode('\\', $appNamespace))
             ->merge(collect(explode('/', $localNamespace)))
             ->add($this->prefix ? $this->name : '')
@@ -148,14 +152,15 @@ class CreateClass
         //  File location
         $directory = str_replace('\\', '/', $this->namespaceName . '/');
 
+
         //  Create directories
-        @File::makeDirectory(app_path() . '/' . $directory, 0777, true);
+        @File::makeDirectory($directory, 0777, true);
 
         //  Write file
         if ($path && $filename) {
             File::put($path . '/' . $filename . '.php', $output);
         } else {
-            File::put(app_path() . '/' . $directory . $this->prefix . $this->name . $this->suffix . '.php', $output);
+            File::put( $directory . $this->prefix . $this->name . $this->suffix . '.php', $output);
         }
 
         return str_replace('/', '\\', $directory . $this->prefix . $this->name . $this->suffix);

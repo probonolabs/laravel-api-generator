@@ -1,6 +1,7 @@
 {
     "name": "probonolabs/laravel-api-generator",
     "description": "Laravel command which rapidly creates single file controllers, requests and resources",
+    "license": "MIT",
     "authors": [
         {
             "name": "Arnd-Jan Luters",

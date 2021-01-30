@@ -41,11 +41,107 @@ class CreateApi extends Command
     protected $type = 'Api Resource';
 
     /**
+     * @var
+     */
+    protected $columns;
+    /**
+     * @var
+     */
+    protected $enumValues;
+
+    /**
      * Execute the console command.
      *
      * @return void
      */
     public function handle()
+    {
+        //  Reset collections
+        $this->columns = collect();
+        $this->enumValues = collect();
+
+        //  Request to configure the model
+        $this->addColumnToModel();
+
+        //  Build API
+        $this->createApi();
+    }
+
+    /**
+     *
+     */
+    public function addColumnToModel()
+    {
+        if ($this->confirm($this->columns->count() == 0 ? 'Do you want to define the model created by the API?' : 'Add another column?')) {
+
+            //  User provides a valid column name
+            $name = $this->askColumnName();
+
+            //  User provides column type
+            $type = $this->askColumnType($name);
+
+            //  Request enum values
+            if($type == 'enum') {
+                $this->requestEnumValues();
+            }
+
+            //  User provide column options
+            $nullable = $this->confirm('Make column \''.$name.'\' nullable?');
+
+            //  Add column to collection
+            $this->columns->add(collect(compact('name', 'type', 'nullable'))
+                ->put('enumValues', $this->enumValues));
+
+            //  Reset enum
+            $this->enumValues = collect();
+
+            //  Ask to add another column
+            $this->addColumnToModel();
+        }
+    }
+
+    public function requestEnumValues() {
+        if($this->confirm($this->enumValues->count() == 0 ? 'Do you want to add enum values?' : 'Add another enum value?')) {
+            $enumValue = $this->ask('Enter an enum value');
+            $this->enumValues->add($enumValue);
+            return $this->requestEnumValues();
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function askColumnName(): string
+    {
+        $name = Str::snake(Str::lower(trim($this->ask('Enter a column name'))));
+        if ($name == '') {
+            $this->warn('Please enter a column name');
+            return $this->askColumnName();
+        }
+        return $name;
+    }
+
+    /**
+     * @param string $name
+     * @return string
+     */
+    public function askColumnType(string $name): string
+    {
+        return $this->choice('Choose a type for column \'' . $name . '\'', [
+            'string',
+            'text',
+            'date',
+            'json',
+            'integer',
+            'double',
+            'enum'
+        ]);
+    }
+
+    /**
+     *
+     */
+    public function createApi()
     {
         //  Resource name
         $name = Str::ucfirst(Str::camel(collect(explode('/', $this->argument('name')))->last()));
@@ -62,7 +158,7 @@ class CreateApi extends Command
 
         //  Create a migration
         $migrationName = 'Create' . Str::plural(Str::ucfirst(Str::camel($name))) . 'Table';
-        $migration = (new CreateMigration($migrationName))->build(false, Str::plural(Str::lower($name)))->saveFile(
+        $migration = (new CreateMigration($migrationName))->setColumns($this->columns)->build(false, Str::plural(Str::lower($name)))->saveFile(
             config('laravel-api-generator.migrations'),
             date('Y_m_d_His', time()) . '_create_' . Str::plural(Str::snake($name)) . '_table'
         );
@@ -76,7 +172,9 @@ class CreateApi extends Command
 
         $routeMiddleware = config('laravel-api-generator.middleware');
         if (count($routeMiddleware) > 0) {
-            $this->addRoute('Route::middleware(['.collect($routeMiddleware)->map(function($item) { return "'".$item."'";})->join(', ').'])->group(function () {');
+            $this->addRoute('Route::middleware([' . collect($routeMiddleware)->map(function ($item) {
+                    return "'" . $item . "'";
+                })->join(', ') . '])->group(function () {');
         }
         collect([
             ['name' => 'Index', 'method' => 'Get', 'return' => 'collection', 'parameter' => false],
