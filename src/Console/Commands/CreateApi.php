@@ -221,6 +221,10 @@ class CreateApi extends Command
                 $apiRoutePath .= '/{' . Str::camel($name) . '}';
             }
 
+            if(!Str::startsWith('app', [Str::lower($controllerNamespace)])) {
+                $controllerNamespace = 'App\\'.$controllerNamespace;
+            }
+
             $this->addRoute((count($routeMiddleware) > 0 ? "\t" : '') . 'Route::' . Str::lower($crud['method']) . '(\'' . $apiRoutePath . '\', [\\' . $controllerNamespace . '::class, \'__invoke\']);');
         });
 
