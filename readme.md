@@ -37,6 +37,11 @@ Create a nested API resource by using this command:
 php artisan make:api Student/Training
 ```
 
+Optional provide --routes to append CRUD routes in your api.php file
+```bash
+php artisan make:api Student --routes
+```
+
 ## License
 
 The MIT License (MIT). Please see [License File](license.md) for more information.

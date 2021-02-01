@@ -159,13 +159,19 @@ class CreateClass
         //  File location
         $directory = str_replace('\\', '/', $this->namespaceName . '/');
 
-        //  Create directories
-        @File::makeDirectory($directory, 0777, true);
 
         //  Write file
         if ($path && $filename) {
+            //  Create directories
+            @File::makeDirectory($path, 0777, true);
+
+            //  Save file
             File::put($path . '/' . $filename . '.php', $output);
         } else {
+            //  Create directories
+            @File::makeDirectory($directory, 0777, true);
+
+            //  Save file
             File::put( $directory . $this->prefix . $this->name . $this->suffix . '.php', $output);
         }
 

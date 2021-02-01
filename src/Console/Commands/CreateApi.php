@@ -26,7 +26,7 @@ class CreateApi extends Command
      *
      * @var string
      */
-    protected $signature = 'make:api {name}';
+    protected $signature = 'make:api {name} {--routes}';
 
     /**
      * The console command description.
@@ -234,7 +234,7 @@ class CreateApi extends Command
         if (count($routeMiddleware) > 0) {
             $this->addRoute('});');
         }
-        $this->line('CRUD resource created, routes added in ' . config('laravel-api-generator.routes'));
+        $this->line('CRUD resource created');
 
     }
 
@@ -243,7 +243,9 @@ class CreateApi extends Command
      */
     protected function addRoute(string $route)
     {
-        File::append(base_path() . '/' . config('laravel-api-generator.routes'), $route . "\n");
+        if($this->option('routes')) {
+            File::append(base_path() . '/' . config('laravel-api-generator.routes'), $route . "\n");
+        }
     }
 
     /**
