@@ -15,7 +15,9 @@ return [
 
         'model' => 'Models',
 
-        'policy' => 'Policies'
+        'policy' => 'Policies',
+
+        'factory' => 'Database\Factories',
 
     ],
 
@@ -34,6 +36,8 @@ return [
 
         'migration' => \Illuminate\Database\Migrations\Migration::class,
 
+        'factory' => \Illuminate\Database\Eloquent\Factories\Factory::class,
+
     ],
 
     /**
@@ -49,6 +53,19 @@ return [
     /**
      *  Middleware, applied on all created routes
      */
-    'middleware' => []
+    'middleware' => [],
+
+    /**
+     *  Migration table columns
+     */
+    'columns' => [
+        'string' => ['faker' => '$this->faker->sentence', 'default' => null],
+        'text' => ['faker' => '$this->faker->sentences(10, true)', 'default' => null],
+        'date' => ['faker' => 'Carbon::now()', 'default' => null],
+        'json' => ['faker' => null, 'default' => '[]'],
+        'integer' => ['faker' => '$this->faker->randomNumber()', 'default' => null],
+        'double' => ['faker' => '$this->faker->randomNumber(2)', 'default' => null],
+        'enum' => ['faker' => '$this->faker->randomElement({{list}})', 'default' => null],
+    ]
 
 ];

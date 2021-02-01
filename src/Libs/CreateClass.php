@@ -51,13 +51,16 @@ class CreateClass
      */
     protected $class;
 
+    protected $appPrefix;
+
     /**
      * CreateClass constructor.
      * @param string $name
      * @param string $appNamespace
      * @param string $localNamespace
+     * @param bool $appPrefix
      */
-    public function __construct(string $name, string $appNamespace = '', string $localNamespace = '')
+    public function __construct(string $name, string $appNamespace = '', string $localNamespace = '', bool $appPrefix = true)
     {
         //  Classname
         $this->name = $name;
@@ -67,6 +70,9 @@ class CreateClass
 
         //  Local namespace
         $this->localNamespace = $localNamespace;
+
+        //  Add App/ prefix in namespace
+        $this->appPrefix = $appPrefix;
     }
 
     /**
@@ -92,11 +98,12 @@ class CreateClass
     /**
      * @param string $appNamespace
      * @param string $localNamespace
+     * @param bool $appPrefix
      * @return string
      */
     public function mergeNamespace(string $appNamespace, string $localNamespace): string
     {
-        if(!Str::startsWith('app', [Str::lower($appNamespace)])) {
+        if($this->appPrefix && !Str::startsWith('app', [Str::lower($appNamespace)])) {
             $appNamespace = 'App\\' . $appNamespace;
         }
         $this->namespaceName = collect(explode('\\', $appNamespace))
@@ -152,7 +159,6 @@ class CreateClass
         //  File location
         $directory = str_replace('\\', '/', $this->namespaceName . '/');
 
-
         //  Create directories
         @File::makeDirectory($directory, 0777, true);
 
@@ -164,5 +170,10 @@ class CreateClass
         }
 
         return str_replace('/', '\\', $directory . $this->prefix . $this->name . $this->suffix);
+    }
+
+    protected function getName(string $resource): string
+    {
+        return collect(explode('\\', $resource))->last();
     }
 }

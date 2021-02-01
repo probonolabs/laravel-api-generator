@@ -83,9 +83,4 @@ class CreateController extends CreateClass
 
         return $this;
     }
-
-    private function getName(string $resource): string
-    {
-        return collect(explode('\\', $resource))->last();
-    }
 }

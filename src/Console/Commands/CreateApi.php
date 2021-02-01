@@ -3,10 +3,12 @@
 namespace ProBonoLabs\LaravelApiGenerator\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 use ProBonoLabs\LaravelApiGenerator\Libs\CreateController;
+use ProBonoLabs\LaravelApiGenerator\Libs\CreateFactory;
 use ProBonoLabs\LaravelApiGenerator\Libs\CreateMigration;
 use ProBonoLabs\LaravelApiGenerator\Libs\CreatePolicy;
 use ProBonoLabs\LaravelApiGenerator\Libs\CreateRequest;
@@ -68,7 +70,7 @@ class CreateApi extends Command
     }
 
     /**
-     *
+     *  Request user to add a column for database migration
      */
     public function addColumnToModel()
     {
@@ -81,12 +83,12 @@ class CreateApi extends Command
             $type = $this->askColumnType($name);
 
             //  Request enum values
-            if($type == 'enum') {
+            if ($type == 'enum') {
                 $this->requestEnumValues();
             }
 
             //  User provide column options
-            $nullable = $this->confirm('Make column \''.$name.'\' nullable?');
+            $nullable = $this->confirm('Make column \'' . $name . '\' nullable?');
 
             //  Add column to collection
             $this->columns->add(collect(compact('name', 'type', 'nullable'))
@@ -100,8 +102,13 @@ class CreateApi extends Command
         }
     }
 
-    public function requestEnumValues() {
-        if($this->confirm($this->enumValues->count() == 0 ? 'Do you want to add enum values?' : 'Add another enum value?')) {
+    /**
+     * Request to add an enum value
+     * @return mixed
+     */
+    public function requestEnumValues()
+    {
+        if ($this->confirm($this->enumValues->count() == 0 ? 'Do you want to add enum values?' : 'Add another enum value?')) {
             $enumValue = $this->ask('Enter an enum value');
             $this->enumValues->add($enumValue);
             return $this->requestEnumValues();
@@ -109,6 +116,7 @@ class CreateApi extends Command
     }
 
     /**
+     * Request column name
      * @return string
      */
     public function askColumnName(): string
@@ -122,24 +130,17 @@ class CreateApi extends Command
     }
 
     /**
+     * Request column type
      * @param string $name
      * @return string
      */
     public function askColumnType(string $name): string
     {
-        return $this->choice('Choose a type for column \'' . $name . '\'', [
-            'string',
-            'text',
-            'date',
-            'json',
-            'integer',
-            'double',
-            'enum'
-        ]);
+        return $this->choice('Choose a type for column \'' . $name . '\'', array_keys(config('laravel-api-generator.columns')));
     }
 
     /**
-     *
+     * Build the API resources
      */
     public function createApi()
     {
@@ -156,9 +157,14 @@ class CreateApi extends Command
         $model = (new CreateModel($name, config('laravel-api-generator.namespaces.model'), $localNamespace->join('/')))
             ->build()->saveFile();
 
+        //  Create a factory
+        $factoryName = $name . 'Factory';
+        (new CreateFactory($factoryName, config('laravel-api-generator.namespaces.factory'), $localNamespace->join('/')))->setColumns($this->columns)->setModel($model)
+            ->build()->saveFile(base_path() . '/' . str_replace('\\', '/', config('laravel-api-generator.namespaces.factory')), $factoryName);
+
         //  Create a migration
         $migrationName = 'Create' . Str::plural(Str::ucfirst(Str::camel($name))) . 'Table';
-        $migration = (new CreateMigration($migrationName))->setColumns($this->columns)->build(false, Str::plural(Str::lower($name)))->saveFile(
+        (new CreateMigration($migrationName))->setColumns($this->columns)->build(false, Str::plural(Str::lower($name)))->saveFile(
             config('laravel-api-generator.migrations'),
             date('Y_m_d_His', time()) . '_create_' . Str::plural(Str::snake($name)) . '_table'
         );
